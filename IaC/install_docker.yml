@@ -1,0 +1,38 @@
+---
+- name: install Docker
+  hosts: localhost
+  become: true
+  tasks:
+    - name: set my distribution
+      ansible.builtin.set_fact:
+        mydistribution: "{{ 'centos' }}"
+    
+    - name: Add gpg key
+      ansible.builtin.rpm_key:
+        key: "https://download.docker.com/linux/{{ mydistribution }}/gpg"
+        state: present
+    
+    - name: Add repo into repo.d
+      ansible.builtin.yum_repository:
+        name: docker
+        description: docker repo
+        baseurl: https://download.docker.com/linux/centos/$releasever/$basearch/stable
+        enabled: true
+        gpgcheck: true
+        gpgkey: "https://download.docker.com/linux/{{ mydistribution }}/gpg"
+
+    - name: Install docker
+      ansible.builtin.yum:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: latest
+        update_cache: true
+
+    - name: start docker
+      ansible.builtin.service:
+        name: "docker"
+        enabled: true
+        state: started
